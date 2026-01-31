@@ -1,4 +1,5 @@
 ﻿const fileInput = document.getElementById("fileInput");
+const sourceCanvas = document.getElementById("sourceCanvas");
 const lineCanvas = document.getElementById("lineCanvas");
 const colorCanvas = document.getElementById("colorCanvas");
 const lineWidth = document.getElementById("lineWidth");
@@ -8,6 +9,7 @@ const colorPicker = document.getElementById("color");
 const resetBtn = document.getElementById("reset");
 const downloadBtn = document.getElementById("download");
 
+const sourceCtx = sourceCanvas.getContext("2d");
 const lineCtx = lineCanvas.getContext("2d");
 const colorCtx = colorCanvas.getContext("2d");
 
@@ -17,7 +19,7 @@ let lastPos = null;
 let imageSize = null;
 
 function resizeCanvases(width, height) {
-  [lineCanvas, colorCanvas].forEach((c) => {
+  [sourceCanvas, lineCanvas, colorCanvas].forEach((c) => {
     c.width = width;
     c.height = height;
   });
@@ -126,6 +128,12 @@ function drawLineArt() {
   lineCtx.putImageData(dst, 0, 0);
 }
 
+function drawSourceImage() {
+  if (!imgBitmap) return;
+  sourceCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+  sourceCtx.drawImage(imgBitmap, 0, 0, sourceCanvas.width, sourceCanvas.height);
+}
+
 function floodFill(x, y, fillColor) {
   const w = colorCanvas.width;
   const h = colorCanvas.height;
@@ -208,6 +216,7 @@ fileInput.addEventListener("change", async (e) => {
   imgBitmap = await createImageBitmap(file);
   imageSize = { width: imgBitmap.width, height: imgBitmap.height };
   resizeCanvases(imageSize.width, imageSize.height);
+  drawSourceImage();
   drawLineArt();
 });
 
@@ -219,6 +228,7 @@ resetBtn.addEventListener("click", () => {
   if (!imgBitmap) return;
   colorCtx.fillStyle = "#ffffff";
   colorCtx.fillRect(0, 0, colorCanvas.width, colorCanvas.height);
+  drawSourceImage();
   drawLineArt();
 });
 

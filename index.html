@@ -48,10 +48,21 @@
         <button id="download" class="btn primary">다운로드</button>
       </div>
 
-      <div class="canvas-wrap" id="canvasWrap">
-        <div class="canvas-stack">
-          <canvas id="colorCanvas"></canvas>
-          <canvas id="lineCanvas"></canvas>
+      <div class="canvas-grid">
+        <div class="canvas-card">
+          <div class="canvas-title">변환 이전</div>
+          <div class="canvas-frame">
+            <canvas id="sourceCanvas"></canvas>
+          </div>
+        </div>
+        <div class="canvas-card">
+          <div class="canvas-title">변환/색칠</div>
+          <div class="canvas-frame">
+            <div class="canvas-stack">
+              <canvas id="colorCanvas"></canvas>
+              <canvas id="lineCanvas"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </section>
