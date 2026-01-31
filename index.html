@@ -1,0 +1,66 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>컬러링 라인 변환</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <h1>라인 컬러링 변환</h1>
+      <p>이미지를 업로드하면 흑백 라인으로 변환하고 바로 색칠할 수 있어요.</p>
+    </header>
+
+    <section class="panel">
+      <div class="controls">
+        <label class="file">
+          <input id="fileInput" type="file" accept="image/*" />
+          이미지 업로드
+        </label>
+
+        <label class="control">
+          <span>선 굵기</span>
+          <input id="lineWidth" type="range" min="1" max="6" value="2" />
+        </label>
+
+        <label class="control">
+          <span>임계값</span>
+          <input id="threshold" type="range" min="40" max="200" value="90" />
+        </label>
+
+        <label class="control">
+          <span>도구</span>
+          <select id="tool">
+            <option value="fill" selected>채우기</option>
+            <option value="brush">브러시</option>
+            <option value="eraser">지우개</option>
+          </select>
+        </label>
+
+        <label class="control color">
+          <span>색상</span>
+          <input id="color" type="color" value="#ff6b00" />
+        </label>
+
+        <button id="reset" class="btn">초기화</button>
+        <button id="download" class="btn primary">다운로드</button>
+      </div>
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="canvas-stack">
+          <canvas id="colorCanvas"></canvas>
+          <canvas id="lineCanvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>모바일/태블릿 터치 지원 · 브라우저 내 즉시 처리</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
