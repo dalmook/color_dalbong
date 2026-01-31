@@ -6,7 +6,6 @@ const lineWidth = document.getElementById("lineWidth");
 const threshold = document.getElementById("threshold");
 const tool = document.getElementById("tool");
 const colorPicker = document.getElementById("color");
-const resetBtn = document.getElementById("reset");
 const downloadBtn = document.getElementById("download");
 
 const sourceCtx = sourceCanvas.getContext("2d");
@@ -222,14 +221,6 @@ fileInput.addEventListener("change", async (e) => {
 
 [lineWidth, threshold].forEach((el) => {
   el.addEventListener("input", drawLineArt);
-});
-
-resetBtn.addEventListener("click", () => {
-  if (!imgBitmap) return;
-  colorCtx.fillStyle = "#ffffff";
-  colorCtx.fillRect(0, 0, colorCanvas.width, colorCanvas.height);
-  drawSourceImage();
-  drawLineArt();
 });
 
 function mergeAndDownload() {
