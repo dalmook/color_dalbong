@@ -14,6 +14,7 @@ const colorCtx = colorCanvas.getContext("2d");
 let imgBitmap = null;
 let isDrawing = false;
 let lastPos = null;
+let imageSize = null;
 
 function resizeCanvases(width, height) {
   [lineCanvas, colorCanvas].forEach((c) => {
@@ -37,9 +38,8 @@ function getPointerPos(e) {
 function drawLineArt() {
   if (!imgBitmap) return;
 
-  const w = imgBitmap.width;
-  const h = imgBitmap.height;
-  resizeCanvases(w, h);
+  const w = imageSize?.width ?? imgBitmap.width;
+  const h = imageSize?.height ?? imgBitmap.height;
 
   const off = document.createElement("canvas");
   off.width = w;
@@ -50,7 +50,7 @@ function drawLineArt() {
   const src = offCtx.getImageData(0, 0, w, h);
   const dst = lineCtx.createImageData(w, h);
 
-  // Sobel edge detection
+  // Grayscale + blur to reduce noise
   const gray = new Uint8ClampedArray(w * h);
   for (let i = 0; i < w * h; i++) {
     const r = src.data[i * 4];
@@ -59,16 +59,29 @@ function drawLineArt() {
     gray[i] = 0.299 * r + 0.587 * g + 0.114 * b;
   }
 
+  const blurred = new Uint8ClampedArray(w * h);
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const sum =
+        gray[i - w - 1] + gray[i - w] + gray[i - w + 1] +
+        gray[i - 1] + gray[i] + gray[i + 1] +
+        gray[i + w - 1] + gray[i + w] + gray[i + w + 1];
+      blurred[i] = sum / 9;
+    }
+  }
+
+  // Sobel edge detection
   const t = parseInt(threshold.value, 10);
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
       const i = y * w + x;
       const gx =
-        -gray[i - w - 1] - 2 * gray[i - 1] - gray[i + w - 1] +
-        gray[i - w + 1] + 2 * gray[i + 1] + gray[i + w + 1];
+        -blurred[i - w - 1] - 2 * blurred[i - 1] - blurred[i + w - 1] +
+        blurred[i - w + 1] + 2 * blurred[i + 1] + blurred[i + w + 1];
       const gy =
-        -gray[i - w - 1] - 2 * gray[i - w] - gray[i - w + 1] +
-        gray[i + w - 1] + 2 * gray[i + w] + gray[i + w + 1];
+        -blurred[i - w - 1] - 2 * blurred[i - w] - blurred[i - w + 1] +
+        blurred[i + w - 1] + 2 * blurred[i + w] + blurred[i + w + 1];
       const mag = Math.sqrt(gx * gx + gy * gy);
       const v = mag > t ? 0 : 255;
       const d = i * 4;
@@ -79,10 +92,38 @@ function drawLineArt() {
     }
   }
 
+  // Thicken lines via simple dilation
+  const radius = Math.max(1, parseInt(lineWidth.value, 10));
+  if (radius > 1) {
+    const srcData = new Uint8ClampedArray(dst.data);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        let makeBlack = false;
+        for (let dy = -radius; dy <= radius && !makeBlack; dy++) {
+          const ny = y + dy;
+          if (ny < 0 || ny >= h) continue;
+          for (let dx = -radius; dx <= radius; dx++) {
+            const nx = x + dx;
+            if (nx < 0 || nx >= w) continue;
+            const ni = (ny * w + nx) * 4;
+            if (srcData[ni] === 0) {
+              makeBlack = true;
+              break;
+            }
+          }
+        }
+        const i = (y * w + x) * 4;
+        if (makeBlack) {
+          dst.data[i] = 0;
+          dst.data[i + 1] = 0;
+          dst.data[i + 2] = 0;
+          dst.data[i + 3] = 255;
+        }
+      }
+    }
+  }
+
   lineCtx.putImageData(dst, 0, 0);
-  lineCtx.lineWidth = parseInt(lineWidth.value, 10);
-  lineCtx.lineJoin = "round";
-  lineCtx.strokeStyle = "#000";
 }
 
 function floodFill(x, y, fillColor) {
@@ -165,6 +206,8 @@ fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   imgBitmap = await createImageBitmap(file);
+  imageSize = { width: imgBitmap.width, height: imgBitmap.height };
+  resizeCanvases(imageSize.width, imageSize.height);
   drawLineArt();
 });
 
@@ -174,9 +217,9 @@ fileInput.addEventListener("change", async (e) => {
 
 resetBtn.addEventListener("click", () => {
   if (!imgBitmap) return;
-  drawLineArt();
   colorCtx.fillStyle = "#ffffff";
   colorCtx.fillRect(0, 0, colorCanvas.width, colorCanvas.height);
+  drawLineArt();
 });
 
 function mergeAndDownload() {

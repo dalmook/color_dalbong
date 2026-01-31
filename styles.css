@@ -113,6 +113,10 @@ canvas {
   touch-action: none;
 }
 
+#lineCanvas {
+  pointer-events: none;
+}
+
 .foot {
   text-align: center;
   margin-top: 14px;
