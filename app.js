@@ -4,8 +4,6 @@ const lineCanvas = document.getElementById("lineCanvas");
 const colorCanvas = document.getElementById("colorCanvas");
 const lineWidth = document.getElementById("lineWidth");
 const threshold = document.getElementById("threshold");
-const tool = document.getElementById("tool");
-const colorPicker = document.getElementById("color");
 const downloadBtn = document.getElementById("download");
 
 const sourceCtx = sourceCanvas.getContext("2d");
@@ -133,71 +131,18 @@ function drawSourceImage() {
   sourceCtx.drawImage(imgBitmap, 0, 0, sourceCanvas.width, sourceCanvas.height);
 }
 
-function floodFill(x, y, fillColor) {
-  const w = colorCanvas.width;
-  const h = colorCanvas.height;
-  const image = colorCtx.getImageData(0, 0, w, h);
-  const data = image.data;
-  const stack = [[Math.floor(x), Math.floor(y)]];
-
-  const idx = (Math.floor(y) * w + Math.floor(x)) * 4;
-  const target = data.slice(idx, idx + 4);
-
-  const [fr, fg, fb] = fillColor;
-  if (target[0] === fr && target[1] === fg && target[2] === fb) return;
-
-  const lineData = lineCtx.getImageData(0, 0, w, h).data;
-  const isLine = (i) => lineData[i] === 0; // black line
-
-  while (stack.length) {
-    const [px, py] = stack.pop();
-    if (px < 0 || py < 0 || px >= w || py >= h) continue;
-    const i = (py * w + px) * 4;
-    if (isLine(i)) continue;
-    if (
-      data[i] !== target[0] ||
-      data[i + 1] !== target[1] ||
-      data[i + 2] !== target[2] ||
-      data[i + 3] !== target[3]
-    ) continue;
-
-    data[i] = fr;
-    data[i + 1] = fg;
-    data[i + 2] = fb;
-    data[i + 3] = 255;
-
-    stack.push([px + 1, py]);
-    stack.push([px - 1, py]);
-    stack.push([px, py + 1]);
-    stack.push([px, py - 1]);
-  }
-
-  colorCtx.putImageData(image, 0, 0);
-}
-
 function startDraw(e) {
   isDrawing = true;
   lastPos = getPointerPos(e);
-  if (tool.value === "fill") {
-    const hex = colorPicker.value;
-    const rgb = [
-      parseInt(hex.slice(1, 3), 16),
-      parseInt(hex.slice(3, 5), 16),
-      parseInt(hex.slice(5, 7), 16),
-    ];
-    floodFill(lastPos.x, lastPos.y, rgb);
-    isDrawing = false;
-  }
 }
 
 function moveDraw(e) {
   if (!isDrawing) return;
-  if (tool.value === "fill") return;
   const pos = getPointerPos(e);
   colorCtx.lineCap = "round";
   colorCtx.lineJoin = "round";
-  colorCtx.lineWidth = tool.value === "eraser" ? 24 : 8;
-  colorCtx.strokeStyle = tool.value === "eraser" ? "#ffffff" : colorPicker.value;
+  colorCtx.lineWidth = 10;
+  colorCtx.strokeStyle = "#ff6b00";
   colorCtx.beginPath();
   colorCtx.moveTo(lastPos.x, lastPos.y);
   colorCtx.lineTo(pos.x, pos.y);
